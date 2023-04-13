@@ -18,15 +18,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        {user.isSignedIn ? (
-          <SignOutButton>
-            <span className="cursor-pointer text-white">Sign Out</span>
-          </SignOutButton>
-        ) : (
-          <SignInButton>
-            <span className="cursor-pointer text-white">Sign In</span>
-          </SignInButton>
-        )}
+        
       </main>
     </>
   );
