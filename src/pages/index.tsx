@@ -1,7 +1,7 @@
 import { SignInButton, useUser, SignOutButton } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+// import Link from "next/link";
 
 import { api } from "~/utils/api";
 
