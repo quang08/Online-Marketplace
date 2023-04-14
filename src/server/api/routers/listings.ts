@@ -21,6 +21,33 @@ export const listingsRouter = createTRPCRouter({
       });
     }),
 
+  getMessages: protectedProcedure.query(async ({ ctx }) => {
+    //gotta log in to send message
+    const userId = ctx.auth.userId;
+    const listing = await ctx.prisma.listing.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        message: true,
+      },
+    });
+    return listing.flatMap((item) => item.message); 
+  }),
+
+  sendMessage: protectedProcedure
+    .input(z.object({ message: z.string(), listingId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const message = await ctx.prisma.message.create({
+        data: {
+          fromUser: ctx.auth.userId,
+          fromUserName: ctx.auth.user?.username ?? "unknown",
+          listingId: input.listingId,
+          message: input.message,
+        },
+      });
+    }),
+
   create: protectedProcedure
     .input(
       z.object({ name: z.string(), description: z.string(), price: z.number() })
