@@ -16,14 +16,17 @@ const ListAnItem: NextPage = () => {
   const router = useRouter();
 
   const { register, handleSubmit } = useForm<ListItemForm>();
-  const onSubmit = (formData: ListItemForm) => {
-    createListing
+  const onSubmit = async (formData: ListItemForm) => {
+    await createListing
       .mutateAsync({
         ...formData,
         price: parseFloat(formData.price),
       })
       .then(() => {
         router.push("/");
+      })
+      .catch((err) => {
+        console.error(err);
       });
   };
 
