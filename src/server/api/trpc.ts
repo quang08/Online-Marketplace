@@ -17,6 +17,14 @@
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
 import { prisma } from "~/server/db";
+import {
+  SignedInAuthObject,
+  SignedOutAuthObject,
+} from "@clerk/nextjs/dist/api";
+
+type AuthContext = {
+  auth: SignedInAuthObject | SignedOutAuthObject;
+};
 
 type CreateContextOptions = Record<string, never>;
 
@@ -30,9 +38,10 @@ type CreateContextOptions = Record<string, never>;
  *
  * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts
  */
-const createInnerTRPCContext = (_opts: CreateContextOptions) => {
-  return {
+const createInnerTRPCContext = ({ auth }: AuthContext) => {
+  return { //1. declare an auth context so that we can use ctx.auth.userId in the mutation like how we use ctx.prisma
     prisma,
+    auth,
   };
 };
 
@@ -43,7 +52,9 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  * @see https://trpc.io/docs/context
  */
 export const createTRPCContext = (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({});
+  return createInnerTRPCContext({ //2. create that auth context
+    auth: getAuth(_opts.req),
+  });
 };
 
 /**
@@ -53,9 +64,11 @@ export const createTRPCContext = (_opts: CreateNextContextOptions) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-import { initTRPC } from "@trpc/server";
+import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+
+import { getAuth } from "@clerk/nextjs/server";
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
@@ -69,6 +82,18 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       },
     };
   },
+});
+
+const isAuthed = t.middleware(({ next, ctx }) => { //4. this middleware would be run before mutation and query
+  if (!ctx.auth.userId) { //checks in trpc context see if auth object exists
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  return next({ //else, provide the auth object to the mutation/query context
+    ctx: {
+      auth: ctx.auth,
+    },
+  });
 });
 
 /**
@@ -93,3 +118,4 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+export const protectedProcedure = t.procedure.use(isAuthed); //3. create a procedure that runs a middleware to check if user is logged in
