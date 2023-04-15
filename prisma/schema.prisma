@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
@@ -18,7 +18,7 @@ model Listing {
     name        String
     description String
     price       Float
-    message     Message[]
+    messages    Message[]
 }
 
 model Message {
