@@ -29,10 +29,10 @@ export const listingsRouter = createTRPCRouter({
         userId,
       },
       include: {
-        message: true,
+        messages: true,
       },
     });
-    return listing.flatMap((item) => item.message); 
+    return listing.flatMap((item) => item.messages); 
   }),
 
   sendMessage: protectedProcedure
